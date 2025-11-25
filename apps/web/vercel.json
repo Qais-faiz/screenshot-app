@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": "build/client",
+  "installCommand": "npm install",
+  "framework": null,
+  "devCommand": "npm run dev"
+}
