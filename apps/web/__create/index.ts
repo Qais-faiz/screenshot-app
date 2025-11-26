@@ -32,10 +32,19 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   };
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-const adapter = NeonAdapter(pool);
+// Lazy initialize pool to avoid connection issues during build
+let pool: Pool | null = null;
+let adapter: ReturnType<typeof NeonAdapter> | null = null;
+
+function getAdapter() {
+  if (!adapter) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    adapter = NeonAdapter(pool);
+  }
+  return adapter;
+}
 
 const app = new Hono();
 
@@ -75,7 +84,7 @@ if (process.env.AUTH_SECRET) {
     '*',
     initAuthConfig((c) => ({
       secret: c.env.AUTH_SECRET,
-      adapter: adapter,
+      adapter: getAdapter(),
       pages: {
         signIn: '/account/signin',
         signOut: '/account/logout',
@@ -137,7 +146,7 @@ if (process.env.AUTH_SECRET) {
             }
 
             // logic to verify if user exists
-            const user = await adapter.getUserByEmail(email);
+            const user = await getAdapter().getUserByEmail(email);
             if (!user) {
               return null;
             }
@@ -185,17 +194,17 @@ if (process.env.AUTH_SECRET) {
 
               // logic to verify if user exists
               console.log('[SIGNUP] Checking if user exists:', email);
-              const user = await adapter.getUserByEmail(email);
+              const user = await getAdapter().getUserByEmail(email);
               if (!user) {
                 console.log('[SIGNUP] Creating new user');
-                const newUser = await adapter.createUser({
+                const newUser = await getAdapter().createUser({
                   id: crypto.randomUUID(),
                   emailVerified: null,
                   email,
                 });
                 console.log('[SIGNUP] User created:', newUser.id);
                 
-                await adapter.linkAccount({
+                await getAdapter().linkAccount({
                   extraData: {
                     password: await hash(password),
                   },
