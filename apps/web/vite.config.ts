@@ -14,6 +14,7 @@ import { restartEnvFileChange } from './plugins/restartEnvFileChange';
 
 export default defineConfig({
   // Keep them available via import.meta.env.NEXT_PUBLIC_*
+  // Removed babel plugin - not needed
   envPrefix: 'NEXT_PUBLIC_',
   optimizeDeps: {
     // Explicitly include fast-glob, since it gets dynamically imported and we
