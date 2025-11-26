@@ -138,7 +138,9 @@ async function registerRoutes() {
 }
 
 // Initial route registration
+console.log('[ROUTES] Starting route registration...');
 await registerRoutes();
+console.log('[ROUTES] Route registration complete');
 
 // Hot reload routes in development
 if (import.meta.env.DEV) {
