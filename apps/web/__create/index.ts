@@ -252,7 +252,11 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 app.use('/api/auth/*', authHandler());
 app.route(API_BASENAME, api);
 
-console.log('[SERVER] Exporting app directly for Vercel...');
+console.log('[SERVER] Creating Hono server...');
+const server = await createHonoServer({
+  app,
+  defaultLogger: false,
+});
+console.log('[SERVER] Hono server created successfully');
 
-// For Vercel, export the Hono app directly
-export default app;
+export default server;
