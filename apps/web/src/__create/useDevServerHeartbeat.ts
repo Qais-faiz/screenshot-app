@@ -3,6 +3,11 @@
 import { useIdleTimer } from 'react-idle-timer';
 
 export function useDevServerHeartbeat() {
+  // Only run in development mode
+  if (import.meta.env.PROD) {
+    return;
+  }
+
   useIdleTimer({
     throttle: 60_000 * 3,
     timeout: 60_000,
