@@ -16,9 +16,9 @@ import { serializeError } from 'serialize-error';
 import { renderToString } from 'react-dom/server';
 import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router';
 import type { StaticHandlerContext } from 'react-router';
-import NeonAdapter from './__create/adapter.js';
-import { getHTMLForErrorPage } from './__create/get-html-for-error-page.js';
-import { API_BASENAME, api } from './__create/route-builder.js';
+import NeonAdapter from './lib/adapter.js';
+import { getHTMLForErrorPage } from './lib/get-html-for-error-page.js';
+import { API_BASENAME, api } from './lib/route-builder.js';
 
 const als = new AsyncLocalStorage<{ requestId: string }>();
 
