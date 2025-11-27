@@ -3,10 +3,14 @@
   "installCommand": "npm install",
   "framework": null,
   "outputDirectory": "build/client",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "/build/client/(.*)",
+      "dest": "/build/client/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index"
     }
   ]
 }

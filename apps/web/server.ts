@@ -1,3 +1,4 @@
+// Vercel Serverless Entry Point for React Router v7 + Hono
 import { AsyncLocalStorage } from 'node:async_hooks';
 import nodeConsole from 'node:console';
 import { skipCSRFCheck } from '@auth/core';
@@ -12,9 +13,12 @@ import { proxy } from 'hono/proxy';
 import { requestId } from 'hono/request-id';
 import { handle } from 'hono/vercel';
 import { serializeError } from 'serialize-error';
-import NeonAdapter from './adapter';
-import { getHTMLForErrorPage } from './get-html-for-error-page';
-import { API_BASENAME, api } from './route-builder';
+import { renderToString } from 'react-dom/server';
+import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router';
+import type { StaticHandlerContext } from 'react-router';
+import NeonAdapter from './__create/adapter';
+import { getHTMLForErrorPage } from './__create/get-html-for-error-page';
+import { API_BASENAME, api } from './__create/route-builder';
 
 const als = new AsyncLocalStorage<{ requestId: string }>();
 
@@ -144,7 +148,6 @@ if (process.env.AUTH_SECRET) {
               return null;
             }
 
-            // logic to verify if user exists
             const user = await getAdapter().getUserByEmail(email);
             if (!user) {
               return null;
@@ -162,7 +165,6 @@ if (process.env.AUTH_SECRET) {
               return null;
             }
 
-            // return user object with the their profile data
             return user;
           },
         }),
@@ -191,7 +193,6 @@ if (process.env.AUTH_SECRET) {
                 return null;
               }
 
-              // logic to verify if user exists
               console.log('[SIGNUP] Checking if user exists:', email);
               const user = await getAdapter().getUserByEmail(email);
               if (!user) {
@@ -227,15 +228,15 @@ if (process.env.AUTH_SECRET) {
     }))
   );
 }
-app.all('/integrations/:path{.+}', async (c, next) => {
+
+app.all('/integrations/:path{.+}', async (c) => {
   const queryParams = c.req.query();
   const url = `${process.env.NEXT_PUBLIC_CREATE_BASE_URL ?? 'https://www.create.xyz'}/integrations/${c.req.param('path')}${Object.keys(queryParams).length > 0 ? `?${new URLSearchParams(queryParams).toString()}` : ''}`;
 
   return proxy(url, {
     method: c.req.method,
     body: c.req.raw.body ?? null,
-    // @ts-ignore - this key is accepted even if types not aware and is
-    // required for streaming integrations
+    // @ts-ignore
     duplex: 'half',
     redirect: 'manual',
     headers: {
@@ -251,8 +252,63 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 app.use('/api/auth/*', authHandler());
 app.route(API_BASENAME, api);
 
+// React Router SSR Handler
+// This will be dynamically imported after build
+let reactRouterHandler: any = null;
+
+async function getReactRouterHandler() {
+  if (!reactRouterHandler) {
+    try {
+      // Import the built React Router server bundle
+      const serverBuild = await import('./build/server/index.js');
+      reactRouterHandler = serverBuild;
+    } catch (error) {
+      console.error('Failed to load React Router server build:', error);
+      throw error;
+    }
+  }
+  return reactRouterHandler;
+}
+
+// Catch-all route for React Router SSR
+app.get('*', async (c) => {
+  try {
+    const build = await getReactRouterHandler();
+    
+    // Create static handler from React Router build
+    const { queryRoute } = createStaticHandler(build.routes);
+    
+    // Create a Web API Request from Hono context
+    const request = c.req.raw;
+    
+    // Query the routes
+    const context = await queryRoute(request);
+    
+    if (context instanceof Response) {
+      return context;
+    }
+    
+    // Create static router
+    const router = createStaticRouter(build.routes, context);
+    
+    // Render to string using StaticRouterProvider
+    const html = renderToString(
+      StaticRouterProvider({ 
+        router, 
+        context,
+        hydrate: false 
+      })
+    );
+    
+    // Return HTML response
+    return c.html(`<!DOCTYPE html>${html}`);
+  } catch (error) {
+    console.error('SSR Error:', error);
+    return c.html(getHTMLForErrorPage(error as Error), 500);
+  }
+});
+
 // Export Vercel serverless handlers
-// These will be used by Vercel's serverless functions
 export const GET = handle(app);
 export const POST = handle(app);
 export const PUT = handle(app);
@@ -260,5 +316,4 @@ export const PATCH = handle(app);
 export const DELETE = handle(app);
 export const OPTIONS = handle(app);
 
-// Default export for compatibility
 export default handle(app);
