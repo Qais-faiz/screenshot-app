@@ -3,6 +3,13 @@
   "installCommand": "npm install",
   "framework": null,
   "outputDirectory": "build/client",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "server.{ts,js}",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "routes": [
     {
       "src": "/build/client/(.*)",
