@@ -55,7 +55,9 @@ export default defineConfig({
     consoleToParent(),
     loadFontsFromTailwindSource(),
     addRenderIds(),
-    reactRouter(),
+    reactRouter({
+      prerender: [],
+    }),
     tsconfigPaths(),
     aliases(),
     layoutWrapperPlugin(),
