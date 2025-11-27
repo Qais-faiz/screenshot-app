@@ -6,15 +6,14 @@ import { authHandler, initAuthConfig } from '@hono/auth-js';
 import { Pool } from 'pg';
 import { hash, verify } from 'argon2';
 import { Hono } from 'hono';
-import { contextStorage, getContext } from 'hono/context-storage';
+import { contextStorage } from 'hono/context-storage';
 import { cors } from 'hono/cors';
 import { proxy } from 'hono/proxy';
 import { requestId } from 'hono/request-id';
-import { createHonoServer } from 'react-router-hono-server/node';
+import { handle } from 'hono/vercel';
 import { serializeError } from 'serialize-error';
 import NeonAdapter from './adapter';
 import { getHTMLForErrorPage } from './get-html-for-error-page';
-import { isAuthAction } from './is-auth-action';
 import { API_BASENAME, api } from './route-builder';
 
 const als = new AsyncLocalStorage<{ requestId: string }>();
@@ -252,11 +251,14 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 app.use('/api/auth/*', authHandler());
 app.route(API_BASENAME, api);
 
-console.log('[SERVER] Creating Hono server...');
-const server = await createHonoServer({
-  app,
-  defaultLogger: false,
-});
-console.log('[SERVER] Hono server created successfully');
+// Export Vercel serverless handlers
+// These will be used by Vercel's serverless functions
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const PATCH = handle(app);
+export const DELETE = handle(app);
+export const OPTIONS = handle(app);
 
-export default server;
+// Default export for compatibility
+export default handle(app);
