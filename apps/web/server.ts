@@ -74,10 +74,11 @@ app.onError((err, c) => {
 });
 
 if (process.env.CORS_ORIGINS) {
+  const origins = process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim());
   app.use(
     '/*',
     cors({
-      origin: process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()),
+      origin: origins,
     })
   );
 }
@@ -85,8 +86,8 @@ if (process.env.CORS_ORIGINS) {
 if (process.env.AUTH_SECRET) {
   app.use(
     '*',
-    initAuthConfig((c) => ({
-      secret: c.env.AUTH_SECRET,
+    initAuthConfig(() => ({
+      secret: process.env.AUTH_SECRET!,
       adapter: getAdapter(),
       pages: {
         signIn: '/account/signin',
@@ -260,6 +261,7 @@ async function getReactRouterHandler() {
   if (!reactRouterHandler) {
     try {
       // Import the built React Router server bundle
+      // @ts-ignore - This file is generated during build
       const serverBuild = await import('./build/server/index.js');
       reactRouterHandler = serverBuild;
     } catch (error) {
