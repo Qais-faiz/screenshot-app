@@ -4,7 +4,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Import the server module
-    const { GET, POST, PUT, PATCH, DELETE, OPTIONS } = await import('../server');
+    const { GET, POST, PUT, PATCH, DELETE, OPTIONS } = await import('./server');
     
     // Map HTTP method to handler
     const handlers: Record<string, any> = { GET, POST, PUT, PATCH, DELETE, OPTIONS };
