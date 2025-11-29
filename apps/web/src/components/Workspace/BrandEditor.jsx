@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from "react";
 import { Type, Image as ImageIcon, Bold, Italic } from "lucide-react";
 

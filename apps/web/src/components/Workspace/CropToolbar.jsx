@@ -1,3 +1,5 @@
+'use client';
+
 import { Check, X } from "lucide-react";
 
 export function CropToolbar({ cropMode, onApplyCrop, onCancelCrop }) {

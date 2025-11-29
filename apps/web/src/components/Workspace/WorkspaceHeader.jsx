@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, useEffect } from "react";
 import { FileText, Plus, Download, User, Trash2, Sparkles, LogOut } from "lucide-react";
 import { BrandSettingsModal } from "./BrandSettingsModal";

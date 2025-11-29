@@ -1,3 +1,5 @@
+'use client';
+
 import { Upload } from "lucide-react";
 import { CropOverlay } from "./CropOverlay";
 import { CropToolbar } from "./CropToolbar";

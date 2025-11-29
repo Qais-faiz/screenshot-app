@@ -1,3 +1,5 @@
+'use client';
+
 import { Crop } from "lucide-react";
 
 export function EditControls({

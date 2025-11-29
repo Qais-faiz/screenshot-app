@@ -1,5 +1,6 @@
+'use client';
+
 import { useState, useEffect, useRef } from "react";
-import { useFetcher } from "react-router";
 import { X, Send, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export function FeedbackModal({ isOpen, onClose, pageSource }) {
