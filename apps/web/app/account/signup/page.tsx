@@ -5,6 +5,8 @@ import useAuth from '@/src/utils/useAuth';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 function SignUpForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
