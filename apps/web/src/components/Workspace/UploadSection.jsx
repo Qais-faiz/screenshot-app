@@ -2,9 +2,12 @@
 
 import { Upload } from "lucide-react";
 
-export function UploadSection({ handleFileUpload, fileInputRef }) {
+export function UploadSection({ handleFileUpload, onFileSelect, fileInputRef }) {
   const handleChange = (e) => {
-    handleFileUpload(e.target.files);
+    const handler = handleFileUpload || onFileSelect;
+    if (handler) {
+      handler(e.target.files);
+    }
     // Reset the input value to allow uploading the same file again
     e.target.value = '';
   };

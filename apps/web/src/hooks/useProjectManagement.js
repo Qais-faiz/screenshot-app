@@ -23,11 +23,16 @@ export function useProjectManagement(
   const loadProjects = useCallback(async () => {
     try {
       const response = await fetch("/api/projects");
-      if (!response.ok) throw new Error("Failed to load projects");
+      if (!response.ok) {
+        // Silently handle errors - projects API might not be fully set up yet
+        setProjects([]);
+        return;
+      }
       const data = await response.json();
       setProjects(data.projects || []);
     } catch (error) {
-      console.error("Error loading projects:", error);
+      // Silently fail - projects feature is optional
+      setProjects([]);
     }
   }, []);
 

@@ -1,4 +1,4 @@
-import useAuth from "@/utils/useAuth";
+import useAuth from "@/src/utils/useAuth";
 
 export default function LogoutPage() {
   const { signOut } = useAuth();

@@ -7,8 +7,8 @@ import {
   RotateCw,
   Crop,
 } from "lucide-react";
-import useUser from "@/utils/useUser";
-import { FeedbackButton } from "@/components/Feedback/FeedbackButton";
+import useUser from "@/src/utils/useUser";
+import { FeedbackButton } from "@/src/components/Feedback/FeedbackButton";
 
 export default function HomePage() {
   const [featuresVisible, setFeaturesVisible] = useState(false);

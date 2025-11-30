@@ -1,6 +1,6 @@
 'use client';
 
-import useAuth from '@/utils/useAuth';
+import useAuth from '@/src/utils/useAuth';
 import { useRouter } from 'next/navigation';
 
 export default function LogoutPage() {

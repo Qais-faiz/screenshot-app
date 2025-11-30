@@ -1,0 +1,16 @@
+# Ignore mobile app during Vercel deployment
+apps/mobile/
+apps/mobile/**
+
+# Ignore old React Router files (if any remain)
+apps/web/.react-router/
+apps/web/api/
+apps/web/plugins/
+
+# Ignore other unnecessary files
+.git/
+.vscode/
+.kiro/
+*.log
+*.md
+!apps/web/**

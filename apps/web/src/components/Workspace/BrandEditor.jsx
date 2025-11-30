@@ -17,6 +17,7 @@ export function BrandEditor({
     size: 16,
     color: "#ffffff"
   });
+  const [logoSize, setLogoSize] = useState(32); // Separate size for logo
 
   // Initialize with existing brand element if editing
   useEffect(() => {
@@ -29,6 +30,8 @@ export function BrandEditor({
           size: 16,
           color: "#ffffff"
         });
+      } else if (existingBrandElement.type === "logo" && existingBrandElement.style?.size) {
+        setLogoSize(existingBrandElement.style.size);
       }
     }
   }, [existingBrandElement]);
@@ -39,14 +42,14 @@ export function BrandEditor({
       const brandElement = {
         type: brandType,
         data: brandType === "logo" ? brandData?.logoPreview : `@${brandData?.brandName || "Brand"}`,
-        style: brandType === "logo" ? { size: textStyle.size } : textStyle, // Save size for logo too
+        style: brandType === "logo" ? { size: logoSize } : textStyle, // Use logoSize for logo, textStyle for text
         color: brandType === "name" ? textStyle.color : (brandData?.brandColor || "#8B70F6"),
         position: existingBrandElement?.position, // Preserve position
       };
       onAddBrand(brandElement);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brandType, textStyle.bold, textStyle.italic, textStyle.size, textStyle.color, brandData?.brandName, brandData?.logoPreview, brandData?.brandColor]);
+  }, [brandType, textStyle.bold, textStyle.italic, textStyle.size, textStyle.color, logoSize, brandData?.brandName, brandData?.logoPreview, brandData?.brandColor]);
 
   if (!brandData) {
     return (
@@ -138,18 +141,18 @@ export function BrandEditor({
                 Size
               </label>
               <span className="text-sm text-[#AAAAAA]">
-                {textStyle.size}px
+                {logoSize}px
               </span>
             </div>
             <input
               type="range"
               min="16"
               max="64"
-              value={textStyle.size}
-              onChange={(e) => setTextStyle(prev => ({ ...prev, size: Number(e.target.value) }))}
+              value={logoSize}
+              onChange={(e) => setLogoSize(Number(e.target.value))}
               className="w-full h-2 bg-[#3A3A3A] rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #8B70F6 0%, #8B70F6 ${((textStyle.size - 16) / 48) * 100}%, #3A3A3A ${((textStyle.size - 16) / 48) * 100}%, #3A3A3A 100%)`
+                background: `linear-gradient(to right, #8B70F6 0%, #8B70F6 ${((logoSize - 16) / 48) * 100}%, #3A3A3A ${((logoSize - 16) / 48) * 100}%, #3A3A3A 100%)`
               }}
             />
           </div>
@@ -260,7 +263,8 @@ export function BrandEditor({
             <img
               src={brandData.logoPreview}
               alt="Brand logo preview"
-              className="h-8 object-contain"
+              style={{ height: `${logoSize}px` }}
+              className="object-contain"
             />
           ) : (
             <span

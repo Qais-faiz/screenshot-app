@@ -1,18 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import useUser from "@/utils/useUser";
-import useUpload from "@/utils/useUpload";
-import { useWorkspaceCanvas } from "@/hooks/useWorkspaceCanvas";
-import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
-import { useProjectManagement } from "@/hooks/useProjectManagement";
-import { useImageTransforms } from "@/hooks/useImageTransforms";
-import { WorkspaceHeader } from "@/components/Workspace/WorkspaceHeader";
-import { UploadSection } from "@/components/Workspace/UploadSection";
-import { EditControls } from "@/components/Workspace/EditControls";
-import { BackgroundControls } from "@/components/Workspace/BackgroundControls";
-import { WorkspaceCanvas } from "@/components/Workspace/WorkspaceCanvas";
-import { BrandEditor } from "@/components/Workspace/BrandEditor";
-import { FeedbackButton } from "@/components/Feedback/FeedbackButton";
-import { gradientOptions, colorOptions, getDefaultBrandGradient } from "@/utils/backgroundOptions";
+import useUser from "@/src/utils/useUser";
+import useUpload from "@/src/utils/useUpload";
+import { useWorkspaceCanvas } from "@/src/hooks/useWorkspaceCanvas";
+import { useCanvasInteraction } from "@/src/hooks/useCanvasInteraction";
+import { useProjectManagement } from "@/src/hooks/useProjectManagement";
+import { useImageTransforms } from "@/src/hooks/useImageTransforms";
+import { WorkspaceHeader } from "@/src/components/Workspace/WorkspaceHeader";
+import { UploadSection } from "@/src/components/Workspace/UploadSection";
+import { EditControls } from "@/src/components/Workspace/EditControls";
+import { BackgroundControls } from "@/src/components/Workspace/BackgroundControls";
+import { WorkspaceCanvas } from "@/src/components/Workspace/WorkspaceCanvas";
+import { BrandEditor } from "@/src/components/Workspace/BrandEditor";
+import { FeedbackButton } from "@/src/components/Feedback/FeedbackButton";
+import { gradientOptions, colorOptions, getDefaultBrandGradient } from "@/src/utils/backgroundOptions";
 
 export default function WorkspacePage() {
   const { data: user, loading } = useUser();

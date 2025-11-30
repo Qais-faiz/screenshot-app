@@ -34,7 +34,7 @@ export function WorkspaceCanvas({
         <div className="relative">
           <canvas
             ref={canvasRef}
-            className={`w-full rounded-2xl ${cropMode ? 'cursor-default' : 'cursor-crosshair'}`}
+            className={`w-full rounded-2xl ${cropMode ? 'cursor-default' : 'cursor-move'}`}
             style={{
               display: "block",
               maxHeight: "calc(100vh - 200px)",

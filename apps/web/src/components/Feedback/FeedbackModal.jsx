@@ -7,10 +7,8 @@ export function FeedbackModal({ isOpen, onClose, pageSource }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
-  
-  const fetcher = useFetcher();
-  const isSubmitting = fetcher.state === "submitting";
-  const actionData = fetcher.data;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionData, setActionData] = useState(null);
   
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -60,7 +58,7 @@ export function FeedbackModal({ isOpen, onClose, pageSource }) {
         setEmail("");
         setMessage("");
         setErrors({});
-        setSubmitStatus(null);
+        setActionData(null);
       }, 300);
     }
   };
@@ -112,9 +110,32 @@ export function FeedbackModal({ isOpen, onClose, pageSource }) {
       return;
     }
 
-    // Submit using fetcher
-    const formData = new FormData(e.currentTarget);
-    fetcher.submit(formData, { method: "post", action: "/feedback" });
+    setIsSubmitting(true);
+    setActionData(null);
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          message,
+          pageSource,
+        }),
+      });
+
+      const data = await response.json();
+      setActionData(data);
+    } catch (error) {
+      setActionData({
+        success: false,
+        error: 'Failed to send feedback. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Character count for message
@@ -155,8 +176,7 @@ export function FeedbackModal({ isOpen, onClose, pageSource }) {
         </div>
 
         {/* Form */}
-        <fetcher.Form method="post" action="/feedback" onSubmit={handleSubmit} className="p-6 space-y-4">
-          <input type="hidden" name="pageSource" value={pageSource} />
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Email Input */}
           <div>
             <label
@@ -284,7 +304,7 @@ export function FeedbackModal({ isOpen, onClose, pageSource }) {
               </>
             )}
           </button>
-        </fetcher.Form>
+        </form>
       </div>
     </div>
   );

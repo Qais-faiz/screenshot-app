@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useAuth from "@/utils/useAuth";
+import useAuth from "@/src/utils/useAuth";
 
 export default function SignUpPage() {
   const [error, setError] = useState(null);

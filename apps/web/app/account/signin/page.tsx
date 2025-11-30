@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import useAuth from '@/utils/useAuth';
+import useAuth from '@/src/utils/useAuth';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 

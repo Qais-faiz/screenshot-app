@@ -5,8 +5,8 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // Rate limiting storage (in-memory for simplicity)
 const rateLimitStore = new Map<string, { count: number; firstRequest: number }>();
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
-const MAX_REQUESTS_PER_HOUR = 5;
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const MAX_REQUESTS_PER_MINUTE = 10; // Allow 10 requests per minute (prevents spam but allows multiple submissions)
 
 // Helper function to check rate limit
 function checkRateLimit(ip: string) {
@@ -23,22 +23,22 @@ function checkRateLimit(ip: string) {
 
   if (!rateLimitData) {
     rateLimitStore.set(ip, { count: 1, firstRequest: now });
-    return { allowed: true, remaining: MAX_REQUESTS_PER_HOUR - 1 };
+    return { allowed: true, remaining: MAX_REQUESTS_PER_MINUTE - 1 };
   }
 
   if (now - rateLimitData.firstRequest > RATE_LIMIT_WINDOW) {
     rateLimitStore.set(ip, { count: 1, firstRequest: now });
-    return { allowed: true, remaining: MAX_REQUESTS_PER_HOUR - 1 };
+    return { allowed: true, remaining: MAX_REQUESTS_PER_MINUTE - 1 };
   }
 
-  if (rateLimitData.count >= MAX_REQUESTS_PER_HOUR) {
+  if (rateLimitData.count >= MAX_REQUESTS_PER_MINUTE) {
     const resetTime = rateLimitData.firstRequest + RATE_LIMIT_WINDOW;
-    const minutesUntilReset = Math.ceil((resetTime - now) / (60 * 1000));
-    return { allowed: false, remaining: 0, resetIn: minutesUntilReset };
+    const secondsUntilReset = Math.ceil((resetTime - now) / 1000);
+    return { allowed: false, remaining: 0, resetIn: secondsUntilReset };
   }
 
   rateLimitData.count++;
-  return { allowed: true, remaining: MAX_REQUESTS_PER_HOUR - rateLimitData.count };
+  return { allowed: true, remaining: MAX_REQUESTS_PER_MINUTE - rateLimitData.count };
 }
 
 // Helper function to validate email
@@ -211,13 +211,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Too many feedback submissions. Please try again later.',
+          error: `Too many feedback submissions. Please wait ${rateLimitResult.resetIn} seconds before trying again.`,
           resetIn: rateLimitResult.resetIn,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': String((rateLimitResult.resetIn || 0) * 60),
+            'Retry-After': String(rateLimitResult.resetIn || 60),
           },
         }
       );

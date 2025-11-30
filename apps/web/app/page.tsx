@@ -9,8 +9,8 @@ import {
   RotateCw,
   Crop,
 } from 'lucide-react';
-import useUser from '@/utils/useUser';
-import { FeedbackButton } from '@/components/Feedback/FeedbackButton';
+import useUser from '@/src/utils/useUser';
+import { FeedbackButton } from '@/src/components/Feedback/FeedbackButton';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -26,32 +26,32 @@ export default function HomePage() {
 
   const features = [
     {
-      id: 'upload',
-      icon: Upload,
-      title: 'Upload Screenshots',
-      description:
-        'Drag and drop multiple images at once. Support for PNG, JPG, and other formats.',
-    },
-    {
       id: 'edit',
-      icon: Layers,
+      icon: Crop,
       title: 'Smart Editing',
       description:
-        'Resize, rotate, crop, and layer your images with intuitive drag-and-drop controls.',
+        'Crop, rotate, resize, and layer your images with intuitive drag-and-drop controls. Perfect aspect ratios every time.',
     },
     {
       id: 'backgrounds',
       icon: Palette,
       title: 'Beautiful Backgrounds',
       description:
-        'Choose from gradients, solid colors, or custom patterns to make your designs pop.',
+        'Choose from 60+ stunning gradients or create custom backgrounds. Auto-applies your brand colors.',
+    },
+    {
+      id: 'brand',
+      icon: Layers,
+      title: 'Brand Your Work',
+      description:
+        'Add your logo or brand name with customizable styling. Save your brand settings for instant reuse.',
     },
     {
       id: 'export',
       icon: Download,
-      title: 'High-Quality Export',
+      title: 'Professional Effects',
       description:
-        'Download your creations in high-resolution PNG or JPG formats ready for any use.',
+        'Apply shadows, rounded corners, and noise textures. Export in high-resolution PNG for any use.',
     },
   ];
 
@@ -111,13 +111,16 @@ export default function HomePage() {
       <section className="pt-16 pb-8 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal text-[#0D0D0D] dark:text-white mb-6 leading-tight tracking-tight">
-            Transform screenshots into{' '}
-            <em className="font-normal italic">stunning</em> designs
+            Create Beautiful, Branded Screenshots{' '}
+            <em className="font-normal italic">in Seconds</em>
           </h1>
 
-          <p className="text-lg md:text-xl text-[#555555] dark:text-[#C0C0C0] mb-8 max-w-3xl mx-auto leading-relaxed font-sans">
-            Upload your screenshots and create beautiful designs with custom
-            backgrounds, professional editing tools, and high-quality exports.
+          <p className="text-lg md:text-xl text-[#555555] dark:text-[#C0C0C0] mb-4 max-w-3xl mx-auto leading-relaxed font-sans">
+            Professional screenshot editing with powerful branding tools. No design skills required.
+          </p>
+          
+          <p className="text-sm text-[#888888] dark:text-[#999999] mb-8 font-sans">
+            No credit card required • Free forever • Export unlimited
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-12">
@@ -245,16 +248,115 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section className="py-16 px-6 bg-white/50 dark:bg-[#1A1A1A]/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-[#0D0D0D] dark:text-white mb-4 tracking-tight">
+              Three simple steps to{' '}
+              <em className="font-normal italic">perfection</em>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-t from-[#8B70F6] to-[#9D7DFF] flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                1
+              </div>
+              <h3 className="text-xl font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                Upload
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] leading-relaxed font-sans">
+                Drag and drop your screenshots or click to upload. Multiple images supported.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-t from-[#8B70F6] to-[#9D7DFF] flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                2
+              </div>
+              <h3 className="text-xl font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                Customize
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] leading-relaxed font-sans">
+                Choose backgrounds, add effects, crop, and position your brand elements perfectly.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-t from-[#8B70F6] to-[#9D7DFF] flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                3
+              </div>
+              <h3 className="text-xl font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                Export
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] leading-relaxed font-sans">
+                Download your beautiful, branded screenshot in high quality. Ready for any platform.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why DesignCraft Section */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-[#0D0D0D] dark:text-white mb-4 tracking-tight">
+              Why creators love{' '}
+              <em className="font-normal italic">DesignCraft</em>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl p-6 border border-[#E0E0E0] dark:border-[#404040]">
+              <h3 className="text-lg font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                ⚡ Fast & Intuitive
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] font-sans">
+                Create professional screenshots in under 60 seconds. No learning curve.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl p-6 border border-[#E0E0E0] dark:border-[#404040]">
+              <h3 className="text-lg font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                🎨 No Design Skills Needed
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] font-sans">
+                Beautiful results without being a designer. Just upload and customize.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl p-6 border border-[#E0E0E0] dark:border-[#404040]">
+              <h3 className="text-lg font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                ✨ Brand Consistency
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] font-sans">
+                Save your brand settings and apply them instantly to every screenshot.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl p-6 border border-[#E0E0E0] dark:border-[#404040]">
+              <h3 className="text-lg font-semibold text-[#121212] dark:text-white mb-2 font-sans">
+                🚀 High Quality
+              </h3>
+              <p className="text-[#666666] dark:text-[#AAAAAA] font-sans">
+                Retina-ready exports that look crisp on any device or platform.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto text-center bg-white dark:bg-[#1E1E1E] rounded-3xl p-12 border border-[#E0E0E0] dark:border-[#404040]">
           <h2 className="text-3xl md:text-4xl font-normal text-[#0D0D0D] dark:text-white mb-4 tracking-tight">
-            Ready to transform your screenshots?
+            Ready to Create Beautiful Screenshots?
           </h2>
 
           <p className="text-lg text-[#666666] dark:text-[#AAAAAA] mb-8 font-sans">
-            Join thousands of creators who use DesignCraft to create stunning
-            designs.
+            Join thousands of creators, developers, and marketers making stunning branded screenshots.
           </p>
 
           {!loading && user ? (

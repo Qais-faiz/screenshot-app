@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { HexColorPicker } from "react-colorful";
-import { getAllGradientGroups } from "@/utils/backgroundOptions";
+import { getAllGradientGroups } from "@/src/utils/backgroundOptions";
 import { Palette, X } from "lucide-react";
 import "./colorPicker.css";
 

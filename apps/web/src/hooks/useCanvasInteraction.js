@@ -197,58 +197,70 @@ export function useCanvasInteraction(
             const deltaY = y - dragStart.y;
             let newImg = { ...img };
 
-            // Calculate aspect ratio from original dimensions
-            const aspectRatio = img.originalWidth / img.originalHeight;
+            // Calculate aspect ratio - use current dimensions for cropped images
+            const aspectRatio = resizeStart.width / resizeStart.height;
+            
+            // Calculate maximum size to prevent quality loss
+            let maxWidth, maxHeight;
+            if (img.cropData) {
+              // For cropped images, limit to original pixels in crop area
+              maxWidth = img.originalWidth * img.cropData.width;
+              maxHeight = img.originalHeight * img.cropData.height;
+            } else {
+              // For uncropped images, limit to original dimensions
+              maxWidth = img.originalWidth;
+              maxHeight = img.originalHeight;
+            }
 
             switch (resizeHandle) {
               case "se": // Bottom-right - use horizontal delta as primary
-                newImg.width = Math.max(50, resizeStart.width + deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width + deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x;
                 newImg.y = resizeStart.y;
                 break;
               case "sw": // Bottom-left
-                newImg.width = Math.max(50, resizeStart.width - deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width - deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x + (resizeStart.width - newImg.width);
                 newImg.y = resizeStart.y;
                 break;
               case "ne": // Top-right
-                newImg.width = Math.max(50, resizeStart.width + deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width + deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x;
                 newImg.y = resizeStart.y + (resizeStart.height - newImg.height);
                 break;
               case "nw": // Top-left
-                newImg.width = Math.max(50, resizeStart.width - deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width - deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x + (resizeStart.width - newImg.width);
                 newImg.y = resizeStart.y + (resizeStart.height - newImg.height);
                 break;
               case "e": // Right - resize horizontally, center vertically
-                newImg.width = Math.max(50, resizeStart.width + deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width + deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x;
                 // Center vertically by adjusting y position
                 newImg.y = resizeStart.y + (resizeStart.height - newImg.height) / 2;
                 break;
               case "w": // Left - resize horizontally, center vertically
-                newImg.width = Math.max(50, resizeStart.width - deltaX);
-                newImg.height = Math.max(50, newImg.width / aspectRatio);
+                newImg.width = Math.max(50, Math.min(maxWidth, resizeStart.width - deltaX));
+                newImg.height = Math.max(50, Math.min(maxHeight, newImg.width / aspectRatio));
                 newImg.x = resizeStart.x + (resizeStart.width - newImg.width);
                 // Center vertically by adjusting y position
                 newImg.y = resizeStart.y + (resizeStart.height - newImg.height) / 2;
                 break;
               case "s": // Bottom - resize vertically, center horizontally
-                newImg.height = Math.max(50, resizeStart.height + deltaY);
-                newImg.width = Math.max(50, newImg.height * aspectRatio);
+                newImg.height = Math.max(50, Math.min(maxHeight, resizeStart.height + deltaY));
+                newImg.width = Math.max(50, Math.min(maxWidth, newImg.height * aspectRatio));
                 // Center horizontally by adjusting x position
                 newImg.x = resizeStart.x + (resizeStart.width - newImg.width) / 2;
                 newImg.y = resizeStart.y;
                 break;
               case "n": // Top - resize vertically, center horizontally
-                newImg.height = Math.max(50, resizeStart.height - deltaY);
-                newImg.width = Math.max(50, newImg.height * aspectRatio);
+                newImg.height = Math.max(50, Math.min(maxHeight, resizeStart.height - deltaY));
+                newImg.width = Math.max(50, Math.min(maxWidth, newImg.height * aspectRatio));
                 // Center horizontally by adjusting x position
                 newImg.x = resizeStart.x + (resizeStart.width - newImg.width) / 2;
                 newImg.y = resizeStart.y + (resizeStart.height - newImg.height);

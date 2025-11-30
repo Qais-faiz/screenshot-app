@@ -1,0 +1,6 @@
+# Mark mobile app as vendored/inactive (won't affect language statistics)
+apps/mobile/** linguist-vendored
+apps/mobile/** linguist-documentation=false
+
+# Ensure web app is properly detected
+apps/web/** linguist-vendored=false
