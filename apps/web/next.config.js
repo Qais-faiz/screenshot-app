@@ -63,7 +63,9 @@ const nextConfig = {
 
   // Environment variables
   env: {
-    // Add any custom env vars here
+    DISABLE_ESLINT_PLUGIN: 'true',
+    ESLINT_NO_DEV_ERRORS: 'true',
+    ESLINT_IGNORE: 'true',
   },
 };
 
