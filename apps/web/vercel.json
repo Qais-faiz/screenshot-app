@@ -1,23 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": null,
-  "outputDirectory": "build/client",
-  "functions": {
-    "api/**/*.{js,ts}": {
-      "memory": 1024,
-      "maxDuration": 10,
-      "includeFiles": "{__create/**,build/**}"
-    }
-  },
-  "routes": [
-    {
-      "src": "/build/client/(.*)",
-      "dest": "/build/client/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index"
-    }
-  ]
+  "installCommand": "npm install"
 }
