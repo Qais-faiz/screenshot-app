@@ -150,7 +150,7 @@ export default function WorkspacePage() {
     setSelectedImageId,
     getCanvasCoordinates,
     brandElement,
-    null, // onBrandElementClick
+    () => setEditingBrand(true), // onBrandElementClick - open editor on double-click
     (newPosition) => {
       if (brandElement) {
         setBrandElement({ ...brandElement, position: newPosition });

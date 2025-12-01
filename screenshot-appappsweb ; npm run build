@@ -1,0 +1,10 @@
+[33me7db08a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Add MIT License for open source compliance
+[33mfa7520d[m Fix: Rename conflicting api folder to resolve NextAuth routing issue
+[33m8aba21c[m Fix: Change NextAuth handler exports format
+[33m355b460[m Add test signup endpoint for debugging
+[33m75caa0d[m Add database connection test endpoint
+[33m1d5d61b[m Fix: Replace argon2 with bcryptjs for Vercel serverless compatibility
+[33m69f31c1[m Add comprehensive console logging for auth debugging
+[33m5ac5961[m Fix: Switch from Neon to pg Pool for Supabase compatibility
+[33m8861fb6[m Add better error logging for auth debugging
+[33m233925d[m Fix: Update Vercel configuration for proper monorepo deployment
