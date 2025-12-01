@@ -216,39 +216,63 @@ const authConfig = {
         image: { label: 'Image', type: 'text' },
       },
       authorize: async (credentials) => {
-        const { email, password } = credentials;
-        if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+        try {
+          console.log('[SIGNUP] Starting signup process');
+          const { email, password } = credentials;
+          
+          if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+            console.log('[SIGNUP] Invalid credentials format');
+            return null;
+          }
+
+          console.log('[SIGNUP] Checking if user exists:', email);
+          // Check if user already exists
+          const existingUserResult = await pool.query(
+            'SELECT * FROM auth_users WHERE email = $1',
+            [email]
+          );
+          
+          if (existingUserResult.rows.length > 0) {
+            console.log('[SIGNUP] User already exists');
+            return null;
+          }
+
+          // Create new user
+          const userId = crypto.randomUUID();
+          const name = typeof credentials.name === 'string' && credentials.name.trim().length > 0
+            ? credentials.name
+            : null;
+          const image = typeof credentials.image === 'string' ? credentials.image : null;
+
+          console.log('[SIGNUP] Creating new user:', { userId, email, name });
+          const newUserResult = await pool.query(
+            'INSERT INTO auth_users (id, name, email, "emailVerified", image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [userId, name, email, null, image]
+          );
+          const newUser = newUserResult.rows[0];
+          console.log('[SIGNUP] User created successfully');
+
+          // Create account with hashed password
+          console.log('[SIGNUP] Hashing password');
+          const hashedPassword = await hash(password);
+          
+          console.log('[SIGNUP] Creating account record');
+          await pool.query(
+            'INSERT INTO auth_accounts ("userId", provider, type, "providerAccountId", password) VALUES ($1, $2, $3, $4, $5)',
+            [userId, 'credentials', 'credentials', userId, hashedPassword]
+          );
+          
+          console.log('[SIGNUP] Signup completed successfully');
+          return { id: newUser.id, email: newUser.email, name: newUser.name, image: newUser.image };
+        } catch (error) {
+          console.error('[SIGNUP] Error during signup:', error);
+          console.error('[SIGNUP] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code
+          });
           return null;
         }
-
-        // Check if user already exists
-        const existingUserResult = await pool.query(
-          'SELECT * FROM auth_users WHERE email = $1',
-          [email]
-        );
-        if (existingUserResult.rows.length > 0) return null;
-
-        // Create new user
-        const userId = crypto.randomUUID();
-        const name = typeof credentials.name === 'string' && credentials.name.trim().length > 0
-          ? credentials.name
-          : null;
-        const image = typeof credentials.image === 'string' ? credentials.image : null;
-
-        const newUserResult = await pool.query(
-          'INSERT INTO auth_users (id, name, email, "emailVerified", image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-          [userId, name, email, null, image]
-        );
-        const newUser = newUserResult.rows[0];
-
-        // Create account with hashed password
-        const hashedPassword = await hash(password);
-        await pool.query(
-          'INSERT INTO auth_accounts ("userId", provider, type, "providerAccountId", password) VALUES ($1, $2, $3, $4, $5)',
-          [userId, 'credentials', 'credentials', userId, hashedPassword]
-        );
-
-        return { id: newUser.id, email: newUser.email, name: newUser.name, image: newUser.image };
       },
     }),
   ],
