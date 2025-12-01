@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { Pool } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import { hash, verify } from 'argon2';
 import type { Adapter } from 'next-auth/adapters';
 
