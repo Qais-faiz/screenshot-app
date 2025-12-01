@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { Pool } from 'pg';
-import { hash, verify } from 'argon2';
+import bcrypt from 'bcryptjs';
 import type { Adapter } from 'next-auth/adapters';
 
 function createAdapter(client: Pool): Adapter {
@@ -200,7 +200,7 @@ const authConfig = {
         const accountPassword = matchingAccount?.password;
         if (!accountPassword) return null;
 
-        const isValid = await verify(accountPassword, password);
+        const isValid = await bcrypt.compare(password, accountPassword);
         if (!isValid) return null;
 
         return { id: user.id, email: user.email, name: user.name, image: user.image };
@@ -254,7 +254,7 @@ const authConfig = {
 
           // Create account with hashed password
           console.log('[SIGNUP] Hashing password');
-          const hashedPassword = await hash(password);
+          const hashedPassword = await bcrypt.hash(password, 10);
           
           console.log('[SIGNUP] Creating account record');
           await pool.query(
