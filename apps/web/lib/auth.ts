@@ -255,7 +255,27 @@ const authConfig = {
   pages: {
     signIn: '/account/signin',
     signOut: '/account/logout',
+    error: '/api/auth/error',
   },
+  callbacks: {
+    async signIn({ user, account }) {
+      console.log('SignIn callback:', { user, account });
+      return true;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const nextAuth = NextAuth(authConfig);

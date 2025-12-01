@@ -7,11 +7,13 @@ import { Suspense } from 'react';
 function ErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams?.get('error');
+  const errorDescription = searchParams?.get('error_description');
 
   const errorMessages: Record<string, string> = {
-    Configuration: 'There is a problem with the server configuration.',
+    Configuration: 'There is a problem with the server configuration. Please check your database connection.',
     AccessDenied: 'You do not have permission to sign in.',
     Verification: 'The verification token has expired or has already been used.',
+    CredentialsSignin: 'Invalid email or password.',
     Default: 'An error occurred during authentication.',
   };
 
@@ -45,6 +47,11 @@ function ErrorContent() {
             {error && (
               <p className="text-xs text-red-500 dark:text-red-500 text-center mt-2">
                 Error code: {error}
+              </p>
+            )}
+            {errorDescription && (
+              <p className="text-xs text-red-500 dark:text-red-500 text-center mt-2">
+                Details: {errorDescription}
               </p>
             )}
           </div>
