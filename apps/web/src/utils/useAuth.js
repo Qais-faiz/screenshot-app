@@ -34,7 +34,7 @@ function useAuth() {
         callbackUrl: options.callbackUrl 
       });
       
-      // First try with redirect: false to handle errors properly
+      // Use NextAuth's signIn with redirect: false to handle errors properly
       const result = await signIn("credentials-signin", {
         email: options.email,
         password: options.password,
@@ -42,7 +42,7 @@ function useAuth() {
         redirect: false,
       });
       
-      console.log('[useAuth] SignIn result:', { ok: result?.ok, error: result?.error });
+      console.log('[useAuth] SignIn result:', { ok: result?.ok, error: result?.error, url: result?.url });
       
       if (result?.error) {
         console.error('[useAuth] SignIn failed with error:', result.error);
@@ -52,15 +52,10 @@ function useAuth() {
         throw error;
       }
       
-      if (result?.ok) {
-        console.log('[useAuth] SignIn successful, using NextAuth redirect');
-        // Use NextAuth's built-in redirect for successful authentication
-        await signIn("credentials-signin", {
-          email: options.email,
-          password: options.password,
-          callbackUrl: options.callbackUrl || callbackUrl || '/workspace',
-          redirect: true, // Let NextAuth handle the redirect
-        });
+      if (result?.ok && result?.url) {
+        console.log('[useAuth] SignIn successful, redirecting to:', result.url);
+        // Use NextAuth's provided redirect URL for successful authentication
+        window.location.href = result.url;
         return result;
       }
       
@@ -93,7 +88,7 @@ function useAuth() {
         callbackUrl: options.callbackUrl 
       });
       
-      // First try with redirect: false to handle errors properly
+      // Use NextAuth's signIn with redirect: false to handle errors properly
       const result = await signIn("credentials-signup", {
         email: options.email,
         password: options.password,
@@ -102,7 +97,7 @@ function useAuth() {
         redirect: false,
       });
       
-      console.log('[useAuth] SignUp result:', { ok: result?.ok, error: result?.error });
+      console.log('[useAuth] SignUp result:', { ok: result?.ok, error: result?.error, url: result?.url });
       
       if (result?.error) {
         console.error('[useAuth] SignUp failed with error:', result.error);
@@ -112,16 +107,10 @@ function useAuth() {
         throw error;
       }
       
-      if (result?.ok) {
-        console.log('[useAuth] SignUp successful, using NextAuth redirect');
-        // Use NextAuth's built-in redirect for successful registration
-        await signIn("credentials-signup", {
-          email: options.email,
-          password: options.password,
-          name: options.name,
-          callbackUrl: options.callbackUrl || callbackUrl || '/workspace',
-          redirect: true, // Let NextAuth handle the redirect
-        });
+      if (result?.ok && result?.url) {
+        console.log('[useAuth] SignUp successful, redirecting to:', result.url);
+        // Use NextAuth's provided redirect URL for successful registration
+        window.location.href = result.url;
         return result;
       }
       

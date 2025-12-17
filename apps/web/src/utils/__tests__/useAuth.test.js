@@ -30,9 +30,12 @@ describe('useAuth Hook', () => {
 
   describe('signInWithCredentials', () => {
     it('should handle successful sign-in', async () => {
-      const mockResult = { ok: true, error: null };
+      const mockResult = { ok: true, error: null, url: '/workspace' };
       signIn.mockResolvedValueOnce(mockResult);
-      signIn.mockResolvedValueOnce(mockResult); // Second call for redirect
+
+      // Mock window.location.href
+      delete window.location;
+      window.location = { href: '' };
 
       const { result } = renderHook(() => useAuth());
 
@@ -45,19 +48,14 @@ describe('useAuth Hook', () => {
         expect(response).toEqual(mockResult);
       });
 
-      expect(signIn).toHaveBeenCalledTimes(2);
-      expect(signIn).toHaveBeenNthCalledWith(1, 'credentials-signin', {
+      expect(signIn).toHaveBeenCalledTimes(1);
+      expect(signIn).toHaveBeenCalledWith('credentials-signin', {
         email: 'test@example.com',
         password: 'password123',
         callbackUrl: '/workspace',
         redirect: false,
       });
-      expect(signIn).toHaveBeenNthCalledWith(2, 'credentials-signin', {
-        email: 'test@example.com',
-        password: 'password123',
-        callbackUrl: '/workspace',
-        redirect: true,
-      });
+      expect(window.location.href).toBe('/workspace');
     });
 
     it('should handle credential errors', async () => {
@@ -118,6 +116,25 @@ describe('useAuth Hook', () => {
       });
     });
 
+    it('should handle unexpected sign-in response', async () => {
+      const mockResult = { ok: true, error: null }; // Missing url - unexpected state
+      signIn.mockResolvedValueOnce(mockResult);
+
+      const { result } = renderHook(() => useAuth());
+
+      await act(async () => {
+        try {
+          await result.current.signInWithCredentials({
+            email: 'test@example.com',
+            password: 'password123',
+          });
+        } catch (error) {
+          expect(error.message).toBe('Sign in failed - unexpected response');
+          expect(error.type).toBe('Default');
+        }
+      });
+    });
+
     it('should use callbackUrl from URL params', () => {
       window.location.search = '?callbackUrl=/dashboard';
       
@@ -130,9 +147,12 @@ describe('useAuth Hook', () => {
 
   describe('signUpWithCredentials', () => {
     it('should handle successful sign-up', async () => {
-      const mockResult = { ok: true, error: null };
+      const mockResult = { ok: true, error: null, url: '/workspace' };
       signIn.mockResolvedValueOnce(mockResult);
-      signIn.mockResolvedValueOnce(mockResult); // Second call for redirect
+
+      // Mock window.location.href
+      delete window.location;
+      window.location = { href: '' };
 
       const { result } = renderHook(() => useAuth());
 
@@ -146,14 +166,15 @@ describe('useAuth Hook', () => {
         expect(response).toEqual(mockResult);
       });
 
-      expect(signIn).toHaveBeenCalledTimes(2);
-      expect(signIn).toHaveBeenNthCalledWith(1, 'credentials-signup', {
+      expect(signIn).toHaveBeenCalledTimes(1);
+      expect(signIn).toHaveBeenCalledWith('credentials-signup', {
         email: 'newuser@example.com',
         password: 'password123',
         name: 'New User',
         callbackUrl: '/workspace',
         redirect: false,
       });
+      expect(window.location.href).toBe('/workspace');
     });
 
     it('should handle existing email errors', async () => {
@@ -177,7 +198,26 @@ describe('useAuth Hook', () => {
     });
 
     it('should handle unexpected sign-up response', async () => {
-      const mockResult = { ok: false, error: null }; // Unexpected state
+      const mockResult = { ok: true, error: null }; // Missing url - unexpected state
+      signIn.mockResolvedValueOnce(mockResult);
+
+      const { result } = renderHook(() => useAuth());
+
+      await act(async () => {
+        try {
+          await result.current.signUpWithCredentials({
+            email: 'test@example.com',
+            password: 'password123',
+          });
+        } catch (error) {
+          expect(error.message).toBe('Account creation failed - unexpected response');
+          expect(error.type).toBe('Default');
+        }
+      });
+    });
+
+    it('should handle sign-up response without url', async () => {
+      const mockResult = { ok: false, error: null }; // No ok and no error
       signIn.mockResolvedValueOnce(mockResult);
 
       const { result } = renderHook(() => useAuth());
