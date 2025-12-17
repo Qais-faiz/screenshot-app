@@ -64,13 +64,30 @@ export default function WorkspacePage() {
   const [editingBrand, setEditingBrand] = useState(false);
   const [brandRenderKey, setBrandRenderKey] = useState(0);
 
-  // Load brand data on mount
+  // Load brand data on mount and verify session persistence
   useEffect(() => {
     const savedBrand = localStorage.getItem('brandData');
     if (savedBrand) {
       setBrandData(JSON.parse(savedBrand));
     }
-  }, []);
+    
+    // Verify session persistence when component mounts
+    const verifySessionPersistence = async () => {
+      if (user) {
+        const { SessionManager } = await import('@/src/utils/sessionManager');
+        const persistence = await SessionManager.checkSessionPersistence();
+        
+        if (!persistence.isPersistent) {
+          console.warn('[Workspace] Session persistence issue:', persistence.error);
+          // Could show a warning to the user or attempt to refresh session
+        } else {
+          console.log('[Workspace] Session persistence verified');
+        }
+      }
+    };
+    
+    verifySessionPersistence();
+  }, [user]);
 
   // Clear brand element when Add Brand is unchecked
   useEffect(() => {
@@ -193,13 +210,7 @@ export default function WorkspacePage() {
     canvasRef,
   });
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = '/account/signin';
-    }
-  }, [user, loading]);
-
+  // Show loading state while verifying session
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -211,8 +222,22 @@ export default function WorkspacePage() {
     );
   }
 
-  if (!user) {
-    return null;
+  // Show error state if session verification failed
+  if (!loading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">⚠️</div>
+          <p className="text-gray-600">Authentication required</p>
+          <button 
+            onClick={() => window.location.href = '/account/signin'}
+            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Delete functions

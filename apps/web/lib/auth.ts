@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import type { Adapter } from 'next-auth/adapters';
+import type { NextAuthConfig } from 'next-auth';
 
 function createAdapter(client: Pool): Adapter {
   return {
@@ -163,11 +164,13 @@ const pool = new Pool({
 
 const adapter = createAdapter(pool);
 
-const authConfig = {
+const authConfig: NextAuthConfig = {
   secret: process.env.AUTH_SECRET || 'fallback-secret-key-for-development-only-change-in-production',
   session: {
     strategy: 'jwt' as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  adapter,
   providers: [
     Credentials({
       id: 'credentials-signin',
@@ -177,33 +180,68 @@ const authConfig = {
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
-        const { email, password } = credentials;
-        if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
-          return null;
+        try {
+          console.log('[SIGNIN] Starting signin process for:', credentials?.email);
+          const { email, password } = credentials as { email: string; password: string };
+          
+          if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+            console.log('[SIGNIN] Invalid credentials format');
+            throw new Error('CredentialsSignin');
+          }
+
+          console.log('[SIGNIN] Looking up user in database');
+          // Get user from database
+          const userResult = await pool.query(
+            'SELECT * FROM auth_users WHERE email = $1',
+            [email.toLowerCase().trim()]
+          );
+          const user = userResult.rows[0];
+          
+          if (!user) {
+            console.log('[SIGNIN] User not found for email:', email);
+            throw new Error('CredentialsSignin');
+          }
+
+          console.log('[SIGNIN] User found, checking password');
+          // Get account password
+          const accountsData = await pool.query(
+            'SELECT * FROM auth_accounts WHERE "userId" = $1 AND provider = $2',
+            [user.id, 'credentials']
+          );
+          
+          const matchingAccount = accountsData.rows[0];
+          const accountPassword = matchingAccount?.password;
+          
+          if (!accountPassword) {
+            console.log('[SIGNIN] No password found for user');
+            throw new Error('CredentialsSignin');
+          }
+
+          const isValid = await bcrypt.compare(password, accountPassword);
+          
+          if (!isValid) {
+            console.log('[SIGNIN] Invalid password');
+            throw new Error('CredentialsSignin');
+          }
+
+          console.log('[SIGNIN] Authentication successful for user:', user.id);
+          return { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            image: user.image 
+          };
+        } catch (error) {
+          console.error('[SIGNIN] Error during signin:', error);
+          
+          // Re-throw known errors to preserve error type
+          if (error instanceof Error && error.message === 'CredentialsSignin') {
+            throw error;
+          }
+          
+          // For database or other errors, throw a generic credentials error
+          throw new Error('CredentialsSignin');
         }
-
-        // Get user from database
-        const userResult = await pool.query(
-          'SELECT * FROM auth_users WHERE email = $1',
-          [email]
-        );
-        const user = userResult.rows[0];
-        if (!user) return null;
-
-        // Get account password
-        const accountsData = await pool.query(
-          'SELECT * FROM auth_accounts WHERE "userId" = $1 AND provider = $2',
-          [user.id, 'credentials']
-        );
-        
-        const matchingAccount = accountsData.rows[0];
-        const accountPassword = matchingAccount?.password;
-        if (!accountPassword) return null;
-
-        const isValid = await bcrypt.compare(password, accountPassword);
-        if (!isValid) return null;
-
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),
     Credentials({
@@ -218,43 +256,58 @@ const authConfig = {
       authorize: async (credentials) => {
         try {
           console.log('[SIGNUP] Starting signup process');
-          const { email, password } = credentials;
+          const { email, password, name, image } = credentials as { 
+            email: string; 
+            password: string; 
+            name?: string; 
+            image?: string; 
+          };
           
           if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
             console.log('[SIGNUP] Invalid credentials format');
-            return null;
+            throw new Error('EmailCreateAccount');
           }
 
-          console.log('[SIGNUP] Checking if user exists:', email);
+          const normalizedEmail = email.toLowerCase().trim();
+          console.log('[SIGNUP] Checking if user exists:', normalizedEmail);
+          
           // Check if user already exists
           const existingUserResult = await pool.query(
             'SELECT * FROM auth_users WHERE email = $1',
-            [email]
+            [normalizedEmail]
           );
           
           if (existingUserResult.rows.length > 0) {
             console.log('[SIGNUP] User already exists');
-            return null;
+            throw new Error('EmailCreateAccount');
+          }
+
+          // Validate password strength
+          if (password.length < 6) {
+            console.log('[SIGNUP] Password too short');
+            throw new Error('EmailCreateAccount');
           }
 
           // Create new user
           const userId = crypto.randomUUID();
-          const name = typeof credentials.name === 'string' && credentials.name.trim().length > 0
-            ? credentials.name
+          const userName = typeof name === 'string' && name.trim().length > 0
+            ? name.trim()
             : null;
-          const image = typeof credentials.image === 'string' ? credentials.image : null;
+          const userImage = typeof image === 'string' && image.trim().length > 0 
+            ? image.trim() 
+            : null;
 
-          console.log('[SIGNUP] Creating new user:', { userId, email, name });
+          console.log('[SIGNUP] Creating new user:', { userId, email: normalizedEmail, name: userName });
           const newUserResult = await pool.query(
             'INSERT INTO auth_users (id, name, email, "emailVerified", image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [userId, name, email, null, image]
+            [userId, userName, normalizedEmail, null, userImage]
           );
           const newUser = newUserResult.rows[0];
           console.log('[SIGNUP] User created successfully');
 
           // Create account with hashed password
           console.log('[SIGNUP] Hashing password');
-          const hashedPassword = await bcrypt.hash(password, 10);
+          const hashedPassword = await bcrypt.hash(password, 12);
           
           console.log('[SIGNUP] Creating account record');
           await pool.query(
@@ -262,16 +315,29 @@ const authConfig = {
             [userId, 'credentials', 'credentials', userId, hashedPassword]
           );
           
-          console.log('[SIGNUP] Signup completed successfully');
-          return { id: newUser.id, email: newUser.email, name: newUser.name, image: newUser.image };
+          console.log('[SIGNUP] Signup completed successfully for user:', userId);
+          return { 
+            id: newUser.id, 
+            email: newUser.email, 
+            name: newUser.name, 
+            image: newUser.image 
+          };
         } catch (error) {
           console.error('[SIGNUP] Error during signup:', error);
-          console.error('[SIGNUP] Error details:', {
-            message: error.message,
-            stack: error.stack,
-            code: error.code
-          });
-          return null;
+          
+          // Re-throw known errors to preserve error type
+          if (error instanceof Error && error.message === 'EmailCreateAccount') {
+            throw error;
+          }
+          
+          // Handle specific database errors
+          if (error instanceof Error && error.message.includes('duplicate key')) {
+            console.log('[SIGNUP] Duplicate email detected');
+            throw new Error('EmailCreateAccount');
+          }
+          
+          // For other errors, throw a generic signup error
+          throw new Error('EmailCreateAccount');
         }
       },
     }),
@@ -282,21 +348,89 @@ const authConfig = {
     error: '/api/auth/error',
   },
   callbacks: {
-    async signIn({ user, account }) {
-      console.log('SignIn callback:', { user, account });
+    async signIn(params) {
+      const { user, account } = params;
+      console.log('[AUTH] SignIn callback:', { user: user?.email, account: account?.provider });
+      
+      // Always allow sign in for credential providers
+      if (account?.provider === 'credentials-signin' || account?.provider === 'credentials-signup') {
+        console.log('[AUTH] Credential provider sign in approved');
+        return true;
+      }
+      
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // Initial sign in
       if (user) {
+        console.log('[AUTH] JWT callback - setting user data:', { userId: user.id, email: user.email });
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
       }
+      
+      // Return previous token if the access token has not expired yet
       return token;
     },
     async session({ session, token }) {
+      // Send properties to the client
       if (token && session.user) {
+        console.log('[AUTH] Session callback - setting session data:', { tokenId: token.id });
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
       }
+      
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('[AUTH] Redirect callback:', { url, baseUrl });
+      
+      // Handle callbackUrl parameter
+      if (url.includes('callbackUrl=')) {
+        const urlParams = new URLSearchParams(url.split('?')[1]);
+        const callbackUrl = urlParams.get('callbackUrl');
+        if (callbackUrl) {
+          console.log('[AUTH] Using callbackUrl:', callbackUrl);
+          // Ensure it's a relative URL or same origin
+          if (callbackUrl.startsWith('/')) {
+            return `${baseUrl}${callbackUrl}`;
+          }
+          try {
+            const callbackUrlObj = new URL(callbackUrl);
+            const baseUrlObj = new URL(baseUrl);
+            if (callbackUrlObj.origin === baseUrlObj.origin) {
+              return callbackUrl;
+            }
+          } catch (e) {
+            console.log('[AUTH] Invalid callbackUrl, using default');
+          }
+        }
+      }
+      
+      // If it's a relative URL, make it absolute
+      if (url.startsWith('/')) {
+        const finalUrl = `${baseUrl}${url}`;
+        console.log('[AUTH] Relative URL redirect:', finalUrl);
+        return finalUrl;
+      }
+      
+      // If it's the same origin, allow it
+      try {
+        const urlObj = new URL(url);
+        const baseUrlObj = new URL(baseUrl);
+        if (urlObj.origin === baseUrlObj.origin) {
+          console.log('[AUTH] Same origin redirect:', url);
+          return url;
+        }
+      } catch (e) {
+        console.log('[AUTH] Invalid URL, using default workspace');
+      }
+      
+      // Default to workspace for successful auth
+      const defaultUrl = `${baseUrl}/workspace`;
+      console.log('[AUTH] Default workspace redirect:', defaultUrl);
+      return defaultUrl;
     },
   },
   debug: process.env.NODE_ENV === 'development',

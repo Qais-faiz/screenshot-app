@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import useAuth from '@/src/utils/useAuth';
+import React, { useState, Suspense } from 'react';
+import useAuth from '../../../src/utils/useAuth';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -17,38 +17,55 @@ function SignUpFormContent() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    // Clear previous errors when starting new attempt
     setError(null);
+    setLoading(true);
 
+    // Client-side validation
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
       setLoading(false);
       return;
     }
 
     try {
-      await signUpWithCredentials({
-        email,
+      console.log('[SignUp] Attempting signup with:', { email, name: name.trim() });
+      
+      const result = await signUpWithCredentials({
+        email: email.trim(),
         password,
         name: name.trim() || undefined,
-        callbackUrl: '/workspace',
-        redirect: true,
+        callbackUrl: searchParams?.get('callbackUrl') || '/workspace',
       });
+      
+      console.log('[SignUp] SignUp completed successfully, result:', result);
+      // The redirect should happen automatically via NextAuth
+      
     } catch (err: any) {
-      const errorMessages: Record<string, string> = {
-        OAuthSignin: "Couldn't start sign-up. Please try again or use a different method.",
-        OAuthCallback: 'Sign-up failed after redirecting. Please try again.',
-        OAuthCreateAccount: "Couldn't create an account with this sign-up option. Try another one.",
-        EmailCreateAccount: "This email can't be used. It may already be registered.",
-        Callback: 'Something went wrong during sign-up. Please try again.',
-        OAuthAccountNotLinked: 'This account is linked to a different sign-in method. Try using that instead.',
-        CredentialsSignin: 'Invalid email or password. If you already have an account, try signing in instead.',
-        AccessDenied: "You don't have permission to sign up.",
-        Configuration: "Sign-up isn't working right now. Please try again later.",
-        Verification: 'Your sign-up link has expired. Request a new one.',
-      };
-
-      setError(errorMessages[err.message] || 'Something went wrong. Please try again.');
+      console.error('[SignUp] SignUp error:', err);
+      
+      // Use the error message from useAuth hook which has better error mapping
+      setError(err.message || 'An unexpected error occurred. Please try again.');
+      
+      // Don't clear form fields on error - preserve user input
+      // Only clear password for security on certain errors
+      if (err.type === 'EmailCreateAccount') {
+        setPassword('');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -89,9 +106,14 @@ function SignUpFormContent() {
                 name="name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  // Clear error when user starts typing
+                  if (error) setError(null);
+                }}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -104,9 +126,14 @@ function SignUpFormContent() {
                 name="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  // Clear error when user starts typing
+                  if (error) setError(null);
+                }}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -119,9 +146,14 @@ function SignUpFormContent() {
                 name="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
-                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  // Clear error when user starts typing
+                  if (error) setError(null);
+                }}
+                placeholder="Create a password (min. 6 characters)"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-[#FAF9F7] dark:bg-[#262626] border border-[#E0E0E0] dark:border-[#404040] rounded-2xl text-[#121212] dark:text-white placeholder-[#999999] dark:placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:border-transparent transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -133,10 +165,17 @@ function SignUpFormContent() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 px-6 bg-gradient-to-t from-[#8B70F6] to-[#9D7DFF] hover:from-[#7E64F2] hover:to-[#8B70F6] text-white font-semibold rounded-2xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:ring-offset-2"
+              disabled={loading || !email || !password}
+              className="w-full py-3 px-6 bg-gradient-to-t from-[#8B70F6] to-[#9D7DFF] hover:from-[#7E64F2] hover:to-[#8B70F6] disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-2xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#8B70F6] focus:ring-offset-2"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating Account...</span>
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </button>
 
             <div className="text-center">
